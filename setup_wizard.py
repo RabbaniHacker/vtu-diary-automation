@@ -80,3 +80,4 @@ def prompt_credentials() -> dict:
 
 if __name__ == "__main__":
     run_wizard()
+

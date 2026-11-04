@@ -45,8 +45,16 @@ echo ---------------------------------------------------
 set /p DO_BACKFILL="Do you have past missing diary entries to backfill right now? (y/N): "
 if /i "%DO_BACKFILL%"=="y" (
     echo.
+    echo Enter the start date from which your entries are pending.
+    echo Formats accepted: DD/MM/YYYY or DD/M/YY (e.g. 24/09/2026 or 24/9/26)
+    set /p START_DATE="Enter pending start date (Press Enter for all): "
+    echo.
     echo [*] Starting backfill...
-    python main.py --backfill
+    if not "%START_DATE%"=="" (
+        python main.py --backfill --start %START_DATE%
+    ) else (
+        python main.py --backfill
+    )
 )
 
 REM 6. Ask to register automatic 15-minute background task

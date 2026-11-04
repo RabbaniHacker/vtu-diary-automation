@@ -7,8 +7,8 @@ Works with any domain, flexible docx files, and supports automatic backfill.
 Usage:
     python main.py                  # normal daily run (today only, or catchup)
     python main.py --backfill       # fill all pending entries up to today
-    python main.py --backfill --start 2026-10-06 --end 2026-11-03
-    python main.py --date 2026-10-15  # fill a specific date
+    python main.py --backfill --start 24/09/2026 --end 03/11/2026
+    python main.py --date 24/09/2026  # fill a specific date
     python main.py --status         # show completion status
 """
 
@@ -30,7 +30,7 @@ from config import (
     ensure_dirs,
     load_credentials,
 )
-from docx_parser import parse_diary, get_entry_for_date
+from docx_parser import parse_diary, get_entry_for_date, parse_date_string
 from state_manager import StateManager
 from browser_bot import DiaryBot
 from logger import setup_logger
@@ -44,6 +44,22 @@ if sys.platform == "win32":
         pass
 
 log = setup_logger("main")
+
+
+def parse_cli_date(val: str) -> date:
+    """Parse flexible date strings (DD/MM/YYYY, DD/MM/YY, YYYY-MM-DD, etc.)."""
+    if not val:
+        raise ValueError("Date string cannot be empty")
+    val = val.strip()
+    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%d/%m/%y", "%d-%m-%y"):
+        try:
+            return datetime.strptime(val, fmt).date()
+        except ValueError:
+            pass
+    parsed = parse_date_string(val)
+    if parsed:
+        return parsed
+    raise ValueError(f"Could not parse date: '{val}'. Expected DD/MM/YYYY or YYYY-MM-DD.")
 
 
 def show_notification(title: str, message: str, timeout_secs: int = 5):
@@ -72,7 +88,7 @@ def compute_target_dates(args, state: StateManager) -> list[date]:
 
     if args.date:
         # Single specific date
-        target = datetime.strptime(args.date, "%Y-%m-%d").date()
+        target = parse_cli_date(args.date)
         if state.is_completed(target.isoformat()):
             log.info(f"{target} is already completed. Use --force to redo.")
             if not args.force:
@@ -85,14 +101,21 @@ def compute_target_dates(args, state: StateManager) -> list[date]:
     if args.backfill:
         # Determine backfill start and end
         today = date.today()
-        start_d = datetime.strptime(args.start, "%Y-%m-%d").date() if args.start else (all_dates[0] if all_dates else today)
-        end_d = datetime.strptime(args.end, "%Y-%m-%d").date() if args.end else today
+        start_d = parse_cli_date(args.start) if args.start else (all_dates[0] if all_dates else today)
+        end_d = parse_cli_date(args.end) if args.end else today
 
         targets = []
         d = start_d
         while d <= end_d:
-            if d in all_entries and not state.is_completed(d.isoformat()):
-                targets.append(d)
+            if d in all_entries:
+                is_done = state.is_completed(d.isoformat())
+                # If explicit start date is given, ignore placeholder notes from other machines
+                if args.start:
+                    info = state.state.get("completed_entries", {}).get(d.isoformat(), {})
+                    if info.get("note") == "Completed prior to automation setup":
+                        is_done = False
+                if not is_done or args.force:
+                    targets.append(d)
             d += timedelta(days=1)
         log.info(f"Backfill: {len(targets)} pending entries between {start_d} and {end_d}")
         return targets
@@ -101,7 +124,6 @@ def compute_target_dates(args, state: StateManager) -> list[date]:
     today = date.today()
     if today not in all_entries:
         log.info(f"No diary data for today ({today}). Checking for earlier pending dates...")
-        # Check if there are any pending dates before today
         past_pending = [d for d in all_dates if d <= today and not state.is_completed(d.isoformat())]
         if past_pending:
             log.info(f"Found {len(past_pending)} pending past entries. Processing earliest: {past_pending[0]}")
@@ -183,7 +205,6 @@ async def run_automation(target_dates: list[date], state: StateManager, headless
                     log.info(f"[OK] Day {entry['day_number']} completed (attempt {attempt}/{MAX_RETRIES})")
                     success = True
 
-                    # Notify user of successful submission
                     show_notification(
                         "VTU Diary Automation",
                         f"Day {entry['day_number']} ({target_date.strftime('%d %b')}) entry saved successfully!"
@@ -230,11 +251,11 @@ def main():
     parser.add_argument("--backfill", action="store_true",
                         help="Fill all pending entries up to today")
     parser.add_argument("--start", type=str,
-                        help="Optional start date for backfill (YYYY-MM-DD)")
+                        help="Start date for backfill (e.g. 24/09/2026 or 2026-09-24)")
     parser.add_argument("--end", type=str,
-                        help="Optional end date for backfill (YYYY-MM-DD)")
+                        help="End date for backfill (e.g. 03/11/2026 or 2026-11-03)")
     parser.add_argument("--date", type=str,
-                        help="Fill a specific date (YYYY-MM-DD format)")
+                        help="Fill a specific date (DD/MM/YYYY or YYYY-MM-DD format)")
     parser.add_argument("--status", action="store_true",
                         help="Show completion status and exit")
     parser.add_argument("--force", action="store_true",

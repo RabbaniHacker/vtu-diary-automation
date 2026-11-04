@@ -327,21 +327,31 @@ class DiaryBot:
         target_month_name = target_date.strftime("%B").lower()
         day_str = str(target_date.day)
 
-        # 2. Check calendar current month text
+        # 2. Navigate calendar to target month and year
         popover = self.page.locator('.rdp, [role="dialog"]').first
-        cal_text = (await popover.inner_text()).lower()
+        target_year = str(target_date.year)
 
-        # If target month is not currently displayed, click previous month
-        if target_month_name not in cal_text:
-            log.info(f"Navigating calendar to {target_date.strftime('%B %Y')}...")
+        for step in range(12):
+            cal_text = (await popover.inner_text()).lower()
+            if target_month_name in cal_text and target_year in cal_text:
+                log.info(f"Calendar reached target month: {target_date.strftime('%B %Y')}")
+                break
+
             prev_btn = self.page.locator('button.rdp-button_previous, [aria-label*="previous" i]').first
-            if await prev_btn.count() > 0:
+            if await prev_btn.count() > 0 and await prev_btn.is_visible():
                 await prev_btn.click()
-                await self._delay(1000)
+                await self._delay(800)
+            else:
+                log.warning("Previous month button not found or not visible.")
+                break
 
-        # 3. Click Day button
+        # 3. Click Day button in the active month
         log.info(f"Selecting day {day_str} in calendar...")
-        day_btn = self.page.locator(f'button.rdp-day_button:text-is("{day_str}"), button:text-is("{day_str}")').first
+        day_btn = self.page.locator(
+            f'button.rdp-day_button:not([class*="outside"]):text-is("{day_str}"), '
+            f'button.rdp-day_button:text-is("{day_str}"), '
+            f'button:text-is("{day_str}")'
+        ).first
         await day_btn.click()
         await self._delay(800)
 

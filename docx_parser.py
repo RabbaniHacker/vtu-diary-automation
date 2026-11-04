@@ -11,29 +11,94 @@ from typing import Dict, List, Optional
 
 import docx
 
+MONTH_MAP = {
+    'jan': 1, 'january': 1,
+    'feb': 2, 'february': 2,
+    'mar': 3, 'march': 3,
+    'apr': 4, 'april': 4,
+    'may': 5,
+    'jun': 6, 'june': 6,
+    'jul': 7, 'july': 7,
+    'aug': 8, 'august': 8,
+    'sep': 9, 'sept': 9, 'september': 9,
+    'oct': 10, 'october': 10,
+    'nov': 11, 'november': 11,
+    'dec': 12, 'december': 12
+}
+
 
 def parse_date_string(text: str) -> Optional[date]:
-    """Try various date formats commonly used in internship diaries."""
-    # 06 October 2026 / 6 Oct 2026
-    m = re.search(r"(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})", text)
+    """
+    Try various date formats commonly used in internship diaries:
+    - 24 September 2026 / 24th Sept 2026 / 24 Sep 2026 / 3rd Oct 2026
+    - 24/09/2026 / 24/9/2026 / 24-09-2026 / 24.09.2026
+    - 2026-09-24 / 2026/09/24
+    """
+    if not text:
+        return None
+
+    # Strip ordinals (24th -> 24, 1st -> 1, 2nd -> 2, 3rd -> 3)
+    clean = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', text, flags=re.IGNORECASE)
+
+    # 1. Day Month Year: e.g. "24 September 2026" or "24 Sept 2026" or "6 Oct 2026"
+    m = re.search(r'\b(\d{1,2})\s+([A-Za-z]+)\.?\s+(\d{4})\b', clean)
     if m:
         d, mon, y = m.groups()
-        for fmt in ("%d %B %Y", "%d %b %Y"):
+        mon_num = MONTH_MAP.get(mon.lower())
+        if mon_num:
             try:
-                return datetime.strptime(f"{d} {mon} {y}", fmt).date()
+                return date(int(y), mon_num, int(d))
             except ValueError:
                 pass
 
-    # DD/MM/YYYY or DD-MM-YYYY
-    m = re.search(r"(\d{1,2})[/-](\d{1,2})[/-](\d{4})", text)
+    # 2. Month Day, Year: e.g. "September 24, 2026" or "Oct 6, 2026"
+    m = re.search(r'\b([A-Za-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})\b', clean)
     if m:
-        d, mon, y = m.groups()
+        mon, d, y = m.groups()
+        mon_num = MONTH_MAP.get(mon.lower())
+        if mon_num:
+            try:
+                return date(int(y), mon_num, int(d))
+            except ValueError:
+                pass
+
+    # 3. DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+    m = re.search(r'\b(\d{1,2})[/\-\.](\d{1,2})[/\-\.](\d{4})\b', clean)
+    if m:
+        p1, p2, y = m.groups()
+        d_val, mon_val = int(p1), int(p2)
+        # Determine day vs month (standard VTU format is DD/MM/YYYY)
+        if 1 <= mon_val <= 12 and 1 <= d_val <= 31:
+            try:
+                return date(int(y), mon_val, d_val)
+            except ValueError:
+                pass
+
+    # 4. YYYY-MM-DD or YYYY/MM/DD
+    m = re.search(r'\b(\d{4})[/\-](\d{1,2})[/\-](\d{1,2})\b', clean)
+    if m:
+        y, mon, d = m.groups()
         try:
-            return datetime.strptime(f"{d}/{mon}/{y}", "%d/%m/%Y").date()
+            return date(int(y), int(mon), int(d))
         except ValueError:
             pass
 
     return None
+
+
+def create_entry_dict(day_number: int, entry_date: date) -> dict:
+    return {
+        "day_number": day_number,
+        "date": entry_date,
+        "date_str": entry_date.strftime("%Y-%m-%d"),
+        "date_display": entry_date.strftime("%d/%m/%Y"),
+        "work_summary": "",
+        "hours_worked": "5.5",
+        "reference_links": "",
+        "learnings_outcomes": "",
+        "blockers_risks": "",
+        "skills": [],
+    }
 
 
 def parse_diary(docx_path: str) -> Dict[date, dict]:
@@ -52,6 +117,7 @@ def parse_diary(docx_path: str) -> Dict[date, dict]:
     doc = docx.Document(docx_path)
     entries: Dict[date, dict] = {}
     current_entry: Optional[dict] = None
+    pending_day_num: Optional[int] = None
 
     # Strategy 1: Paragraph-based parsing
     for para in doc.paragraphs:
@@ -59,24 +125,27 @@ def parse_diary(docx_path: str) -> Dict[date, dict]:
         if not text:
             continue
 
-        # Look for Day header: e.g. "Day 65 -- 06 October 2026" or "Day 1 - 03 Aug 2026"
         day_match = re.search(r"\bDay\s+(\d+)\b", text, re.IGNORECASE)
-        entry_date = parse_date_string(text) if day_match else None
+        entry_date = parse_date_string(text)
 
+        # Case A: Both Day number and Date on same line (e.g. "Day 53 -- 24 September 2026")
         if day_match and entry_date:
-            current_entry = {
-                "day_number": int(day_match.group(1)),
-                "date": entry_date,
-                "date_str": entry_date.strftime("%Y-%m-%d"),
-                "date_display": entry_date.strftime("%d/%m/%Y"),
-                "work_summary": "",
-                "hours_worked": "5.5",
-                "reference_links": "",
-                "learnings_outcomes": "",
-                "blockers_risks": "",
-                "skills": [],
-            }
+            day_num = int(day_match.group(1))
+            current_entry = create_entry_dict(day_num, entry_date)
             entries[entry_date] = current_entry
+            pending_day_num = None
+            continue
+
+        # Case B: Day header on this line, Date on next line (e.g. Line 1: "Day 53", Line 2: "24/09/2026")
+        if day_match and not entry_date:
+            pending_day_num = int(day_match.group(1))
+            continue
+
+        # Case C: Previous line was Day header, and this line contains the date
+        if pending_day_num is not None and entry_date:
+            current_entry = create_entry_dict(pending_day_num, entry_date)
+            entries[entry_date] = current_entry
+            pending_day_num = None
             continue
 
         if current_entry is None:
@@ -107,18 +176,7 @@ def parse_diary(docx_path: str) -> Dict[date, dict]:
                 day_m = re.search(r"\bDay\s+(\d+)\b", combined, re.IGNORECASE)
                 d_val = parse_date_string(combined)
                 if day_m and d_val:
-                    entry = {
-                        "day_number": int(day_m.group(1)),
-                        "date": d_val,
-                        "date_str": d_val.strftime("%Y-%m-%d"),
-                        "date_display": d_val.strftime("%d/%m/%Y"),
-                        "work_summary": "",
-                        "hours_worked": "5.5",
-                        "reference_links": "",
-                        "learnings_outcomes": "",
-                        "blockers_risks": "",
-                        "skills": [],
-                    }
+                    entry = create_entry_dict(int(day_m.group(1)), d_val)
                     for t in cells_text:
                         l = t.lower()
                         if ":" in t:
