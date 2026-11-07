@@ -11,7 +11,7 @@ Works with **any internship domain**: Web Development, Artificial Intelligence, 
 1. Reads your diary content from your Word (.docx) file
 2. Logs into the VTU portal with your credentials
 3. Navigates to Internship Diary and selects your internship
-4. Picks the correct date, fills Work Summary, Hours (5.5), Reference Links, Learnings, Blockers
+4. Picks the correct date, fills Work Summary, Hours (configurable, default 5.5), Reference Links, Learnings, Blockers
 5. Selects matching skills one-by-one from the portal dropdown
 6. Clicks Save and verifies the entry appeared in the records
 7. Takes a verification screenshot saved as `screenshots/DDMMYY.png`
@@ -38,6 +38,7 @@ That's it! It will:
 - ✅ Auto-install Python libraries and Chromium (first time only)
 - ✅ Ask for your VTU Email and Password
 - ✅ Ask your internship domain (or auto-detect it)
+- ✅ Ask your daily work hours (default: 5.5, or enter any hours you need)
 - ✅ Show you a menu to choose what to do:
 
 ```
@@ -45,7 +46,8 @@ That's it! It will:
   2. Backfill all pending past entries
   3. Backfill from a specific date
   4. Check completion status
-  5. Exit
+  5. Change Settings (Work Hours, Domain, Credentials)
+  6. Exit
 ```
 
 > **Note:** You need [Python 3.10+](https://www.python.org/downloads/) installed.
@@ -115,6 +117,7 @@ All other dependencies (Playwright, python-docx, Chromium) are installed automat
 |:---|:---|
 | `python main.py` | Fill today's entry (or earliest pending) |
 | `python main.py --headless` | Run silently without opening browser |
+| `python main.py --hours 6.5` | Run with custom daily work hours |
 | `python main.py --backfill` | Fill all pending entries up to today |
 | `python main.py --backfill --start 24/09/2026` | Backfill from a specific date |
 | `python main.py --date 15/10/2026` | Fill one specific date |
@@ -126,6 +129,12 @@ Date formats accepted: `DD/MM/YYYY`, `DD/MM/YY`, `YYYY-MM-DD`
 ---
 
 ## FAQ
+
+**Q: Can I change my daily work hours from 5.5 to something else?**
+Yes! You can set any hours you want:
+- In `start.bat` → select **Option 5** (Change Settings) → **1** (Change Work Hours), or
+- Pass `--hours 6` or `--hours 6.5` via command line, or
+- Edit `"work_hours": "6.0"` in `credentials.json`.
 
 **Q: Will this work for AI / Data Science / Cloud internships?**
 Yes! The bot auto-detects your enrolled internship on the portal. Skills are mapped for Web Dev, AI, ML, Data Science, Cyber Security, Cloud, and more.
@@ -139,8 +148,8 @@ When you next turn it on and connect to Wi-Fi, it catches up and fills the misse
 **Q: Is my password safe?**
 Your `credentials.json` is listed in `.gitignore` and will never be pushed to GitHub. It stays only on your local machine.
 
-**Q: Can I change my credentials later?**
-Run `start.bat` again — it will ask if you want to change credentials.
+**Q: Can I change my credentials or domain later?**
+Run `start.bat` and select **Option 5** (Change Settings) to update your hours, domain, or login anytime.
 
 ---
 

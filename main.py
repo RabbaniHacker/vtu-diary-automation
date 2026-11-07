@@ -172,9 +172,11 @@ def _print_status(state: StateManager, all_dates: list[date]):
     print(f"{'='*50}\n")
 
 
-async def run_automation(target_dates: list[date], state: StateManager, headless: bool = False):
+async def run_automation(target_dates: list[date], state: StateManager, headless: bool = False, override_hours: str = None):
     """Run the browser automation for all target dates."""
     creds = load_credentials()
+    if override_hours:
+        creds["work_hours"] = str(override_hours)
     all_entries = parse_diary(DOCX_FILE)
 
     bot = DiaryBot(credentials=creds, headless=headless)
@@ -262,6 +264,8 @@ def main():
                         help="Re-do entries even if already completed")
     parser.add_argument("--headless", action="store_true",
                         help="Run browser in headless mode")
+    parser.add_argument("--hours", type=str,
+                        help="Override daily work hours (e.g. 5.5, 6, 8)")
     parser.add_argument("--wait", type=int, default=0,
                         help="Seconds to wait before starting")
     args = parser.parse_args()
@@ -283,7 +287,7 @@ def main():
     for d in target_dates:
         log.info(f"  {d.strftime('%d %b %Y (%A)')}")
 
-    asyncio.run(run_automation(target_dates, state, headless=args.headless))
+    asyncio.run(run_automation(target_dates, state, headless=args.headless, override_hours=args.hours))
 
 
 if __name__ == "__main__":
