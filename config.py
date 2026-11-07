@@ -18,8 +18,8 @@ LOGS_DIR = os.path.join(BASE_DIR, "logs")
 def find_docx_file() -> str:
     """
     Find the diary docx file automatically.
-    Prioritizes 'diary_data.docx', then any file with 'diary' in name,
-    or falls back to the first .docx file in the folder.
+    Prioritizes 'diary_data.docx', then any custom docx file,
+    and falls back to 'sample_diary_template.docx'.
     """
     default_name = os.path.join(BASE_DIR, "diary_data.docx")
     if os.path.exists(default_name):
@@ -27,12 +27,16 @@ def find_docx_file() -> str:
 
     candidates = [
         f for f in os.listdir(BASE_DIR)
-        if f.lower().endswith(".docx") and not f.startswith("~$")
+        if f.lower().endswith(".docx") and not f.startswith("~$") and f != "sample_diary_template.docx"
     ]
     if candidates:
         diary_candidates = [f for f in candidates if "diary" in f.lower()]
         chosen = diary_candidates[0] if diary_candidates else candidates[0]
         return os.path.join(BASE_DIR, chosen)
+
+    sample = os.path.join(BASE_DIR, "sample_diary_template.docx")
+    if os.path.exists(sample):
+        return sample
 
     return default_name
 

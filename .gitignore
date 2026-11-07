@@ -16,6 +16,7 @@ logs/*.log
 # Word diary documents (contain personal internship details)
 *.docx
 *.doc
+!sample_diary_template.docx
 
 # Python bytecode & cache
 __pycache__/

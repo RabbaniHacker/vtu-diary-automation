@@ -28,8 +28,12 @@ cd vtu-diary-automation
 
 Or click **Code → Download ZIP** on GitHub and extract it.
 
-### Step 2: Add Your Diary File
-Copy your VTU Internship Diary Word file (`.docx`) into the project folder. You can name it anything — the bot auto-detects it.
+### Step 2: Add Your Diary File (Or Generate One)
+- **Already have a Word file?** Copy your `.docx` file into the folder (any name works).
+- **Don't have a file?**
+  - **Option A (Instant Built-in Generator)**: Run `python generate_diary.py` to generate a complete diary for AI, Data Science, Cyber Security, Cloud, Python, etc. in 5 seconds!
+  - **Option B (Use Claude / ChatGPT)**: Copy the ready-made prompt from [PROMPT_TEMPLATE.md](PROMPT_TEMPLATE.md) into [Claude](https://claude.ai) or ChatGPT to generate your exact custom diary.
+  - **Option C (Sample Template)**: A complete 110-day reference is included as [`sample_diary_template.docx`](sample_diary_template.docx).
 
 ### Step 3: Run
 Double-click **`start.bat`**
@@ -52,6 +56,47 @@ That's it! It will:
 
 > **Note:** You need [Python 3.10+](https://www.python.org/downloads/) installed.
 > Make sure to check **"Add Python to PATH"** during installation.
+
+---
+
+## 📝 Generating a Custom Diary for Any Domain / Company
+
+If your internship is from another company (Infosys, Internshala, Rooman, Oasis Infobyte, Cisco, TCS, etc.) or a different domain (AI/ML, Data Science, Cyber Security, Cloud, Python, Java), you can create your `.docx` file easily:
+
+### Method 1: The Master AI Prompt (Claude / ChatGPT)
+Copy this prompt into [Claude](https://claude.ai) or [ChatGPT](https://chatgpt.com) and replace the bracketed values:
+
+```text
+You are an expert technical curriculum designer. Generate a complete, realistic, day-by-day VTU Internship Daily Diary for my university internship submission.
+
+My Details:
+- Domain: [e.g. Artificial Intelligence & Machine Learning / Cyber Security / Web Dev]
+- Company: [e.g. Infosys Springboard / Internshala / Rooman / Oasis Infobyte]
+- Start Date: [e.g. 03 August 2026]
+- Total Days: [e.g. 110 days or 60 days or 30 days]
+- Daily Work Hours: [e.g. 5.5]
+- Reference Link: [e.g. https://springboard.infosys.com or https://vtu.internyet.in]
+
+Every day entry MUST follow this exact format:
+Day [N] -- [DD Month YYYY]
+Internship: [Domain] -- [Company]
+Work Summary: [1-2 sentences of technical tasks completed]
+Hours Worked: [5.5]
+Reference Links: [Reference URL]
+Learnings / Outcomes: [1-2 sentences on technical concepts learned]
+Blockers / Risks: [1 sentence on technical hurdles or 'No major blockers']
+Skills Used: [Skill 1], [Skill 2], [Skill 3]
+
+Please generate Day 1 through Day [Total Days] and output as a downloadable .docx file or provide python-docx code to save it.
+```
+Then ask Claude to give you the `.docx` file (or paste into Word and save as `.docx`). See [PROMPT_TEMPLATE.md](PROMPT_TEMPLATE.md) for full instructions.
+
+### Method 2: Built-in Instant Generator
+Don't have an AI account? Run this in your terminal:
+```bash
+python generate_diary.py
+```
+Pick your domain (AI/ML, Data Science, Cyber Security, Cloud, Python), enter your company name and start date. It creates a ready-to-use `.docx` file automatically!
 
 ---
 
@@ -89,6 +134,9 @@ All other dependencies (Playwright, python-docx, Chromium) are installed automat
 ├── setup.bat                 ← Alternative: full install + start
 ├── setup_scheduler.bat       ← Enable daily auto-mode (run as Admin)
 ├── run_backfill.bat          ← Quick backfill shortcut
+├── generate_diary.py         ← Instant offline diary generator for any domain
+├── PROMPT_TEMPLATE.md        ← Ready-to-copy Claude / ChatGPT prompt
+├── sample_diary_template.docx← 110-day reference template (Edutainer Web Dev)
 │
 ├── main.py                   # CLI orchestrator
 ├── browser_bot.py            # Playwright automation engine

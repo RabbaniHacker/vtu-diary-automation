@@ -159,23 +159,29 @@ def change_settings():
 
 def check_docx() -> bool:
     """Check if a diary .docx file exists in the project folder."""
-    docx_files = [
+    custom_files = [
         f for f in glob.glob(os.path.join(BASE_DIR, "*.docx"))
-        if not os.path.basename(f).startswith("~$")
+        if not os.path.basename(f).startswith("~$") and os.path.basename(f) != "sample_diary_template.docx"
     ]
-    if not docx_files:
-        print("  [!] No diary .docx file found!")
-        print()
-        print("  Please copy your VTU Internship Diary Word file (.docx) into:")
-        print(f"  {BASE_DIR}")
-        print()
-        print("  You can name it anything (e.g. diary_data.docx, AI_Diary.docx, etc.)")
-        print("  The automation will auto-detect it.")
-        print()
-        return False
-    else:
-        print(f"  [OK] Diary document found: {os.path.basename(docx_files[0])}")
+    if custom_files:
+        print(f"  [OK] Custom diary document found: {os.path.basename(custom_files[0])}")
         return True
+
+    sample = os.path.join(BASE_DIR, "sample_diary_template.docx")
+    if os.path.exists(sample):
+        print("  [*] Found template: sample_diary_template.docx (Edutainer Web Dev 110-day)")
+        print("      (To use your own domain/company, paste your custom .docx into this folder,")
+        print("       or see PROMPT_TEMPLATE.md to generate one with Claude!)")
+        return True
+
+    print("  [!] No diary .docx file found!")
+    print()
+    print("  Please copy your VTU Internship Diary Word file (.docx) into:")
+    print(f"  {BASE_DIR}")
+    print()
+    print("  Don't have a diary file? See PROMPT_TEMPLATE.md to generate one using Claude/ChatGPT!")
+    print()
+    return False
 
 
 def show_menu_and_run():
