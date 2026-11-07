@@ -1,89 +1,159 @@
 # VTU Internship Diary Automation
 
-An intelligent, silent background automation bot for the **VTU Internship Portal** (`https://vtu.internyet.in/`). 
+Automatically fills your daily internship diary entries on the [VTU Internship Portal](https://vtu.internyet.in/sign-in). Runs silently in the background every day — zero effort after setup.
 
-Designed to be universal, modular, and shareable with friends across **any internship domain** (Web Development, Artificial Intelligence, Data Science, Machine Learning, Cyber Security, Cloud Computing, etc.).
-
----
-
-## Key Features
-
-- **Any Domain / Internship**: Automatically detects your enrolled internship or selects your specific domain (Web Dev, AI, Cyber Security, etc.).
-- **Drop-in DOCX Parser**: Drop **any** VTU Diary `.docx` file into the folder; the bot parses all days, work summaries, learnings, reference links, blockers, and skills automatically.
-- **Fixed 5.5 Hours**: Enforces 5.5 hours per day as required by VTU guidelines.
-- **Intelligent Skill Selection**: Selects skills one-by-one from the portal dropdown with automatic fallback so the Save button is always enabled.
-- **Silent Background Execution**: Runs headless in the background via Windows Task Scheduler. No command prompt popups or browser windows interrupt your work.
-- **Wi-Fi Catch-Up**: If your laptop turns on without Wi-Fi and connects hours later (e.g., opened at 5 AM offline, Wi-Fi connected at 5 PM), the bot automatically detects internet and submits your diary.
-- **Zero Resource Consumption**: After today's entry is completed, background checks exit in 0.05 seconds with 0% CPU, 0% Wi-Fi, and 0 browser activity.
-- **Automated Verification & Screenshots**: Verifies each submission on the portal entries table and saves full-page screenshots as `screenshots/DDMMYY.png`.
-- **Desktop Notifications**: Displays a native Windows notification whenever an entry is completed.
-- **Smart Memory (`state.json`)**: Remembers what was submitted. If your laptop shuts down mid-run, it picks up right where it left off without duplicate submissions.
+Works with **any internship domain**: Web Development, Artificial Intelligence, Data Science, Machine Learning, Cyber Security, Cloud Computing, and more.
 
 ---
 
-## Quick Start (For You & Friends)
+## How It Works
 
-### Step 1: Clone or Download the Repository
+1. Reads your diary content from your Word (.docx) file
+2. Logs into the VTU portal with your credentials
+3. Navigates to Internship Diary and selects your internship
+4. Picks the correct date, fills Work Summary, Hours (5.5), Reference Links, Learnings, Blockers
+5. Selects matching skills one-by-one from the portal dropdown
+6. Clicks Save and verifies the entry appeared in the records
+7. Takes a verification screenshot saved as `screenshots/DDMMYY.png`
+
+---
+
+## Quick Start (3 Steps)
+
+### Step 1: Download
 ```bash
-git clone https://github.com/YOUR_USERNAME/vtu-diary-automation.git
+git clone https://github.com/RabbaniHacker/vtu-diary-automation.git
 cd vtu-diary-automation
 ```
 
-### Step 2: Add Your Diary Word File
-Copy your VTU Internship Diary Word file (`.docx`) into the project folder. You can name it anything (e.g. `diary_data.docx` or `VTU_AI_Internship_Diary.docx`).
+Or click **Code → Download ZIP** on GitHub and extract it.
 
-### Step 3: Run the One-Click Setup
-Double-click **`setup.bat`**:
-1. Automatically installs Python dependencies (`playwright`, `python-docx`).
-2. Downloads the Chromium automation engine.
-3. Asks for your VTU portal Email, Password, and Internship Domain (or press Enter for auto-detect).
-4. Asks if you want to backfill any missed past dates right now.
-5. Configures the silent 15-minute background Task Scheduler!
+### Step 2: Add Your Diary File
+Copy your VTU Internship Diary Word file (`.docx`) into the project folder. You can name it anything — the bot auto-detects it.
 
-*That's it! Your diary entries are now fully automated.*
+### Step 3: Run
+Double-click **`start.bat`**
 
----
+That's it! It will:
+- ✅ Auto-install Python libraries and Chromium (first time only)
+- ✅ Ask for your VTU Email and Password
+- ✅ Ask your internship domain (or auto-detect it)
+- ✅ Show you a menu to choose what to do:
 
-## Manual / Advanced CLI Usage
-
-| Command | Purpose |
-| :--- | :--- |
-| `python main.py` | Submits today's entry (or earliest pending past entry). |
-| `python main.py --headless` | Runs silently in the background without opening the browser. |
-| `python main.py --backfill` | Backfills all uncompleted entries up to today. |
-| `python main.py --backfill --start 2026-10-06 --end 2026-11-03` | Backfills a specific date range. |
-| `python main.py --date 2026-10-15` | Submits a single specific date. |
-| `python main.py --date 2026-10-15 --force` | Re-does a date even if marked completed in `state.json`. |
-| `python main.py --status` | Displays total completed, remaining, and failed entries. |
-
----
-
-## File Structure
-
-```text
-├── config.py                 # Auto-detects docx, loads credentials & settings
-├── docx_parser.py            # Universal multi-format .docx diary parser
-├── browser_bot.py            # Playwright automation engine (all domains)
-├── state_manager.py          # Persistent JSON tracker (state.json)
-├── main.py                   # Orchestrator & CLI runner
-├── setup.bat                 # One-click interactive setup for friends
-├── setup_wizard.py           # CLI credential & docx configurator
-├── setup_scheduler.bat       # Auto-elevating Windows Task Scheduler installer
-├── register_task.ps1         # Registers logon + 15-minute repeat trigger
-├── launcher.bat              # Smart launcher: checks state -> checks Wi-Fi -> runs
-├── launcher.vbs              # 100% silent background runner (0 cmd flicker)
-├── run_backfill.bat          # One-click backfill runner
-├── credentials.example.json  # Template for login credentials
-├── requirements.txt          # Python dependencies
-├── .gitignore                # Protects credentials, screenshots, and docx
-├── screenshots/              # Saved verification screenshots (DDMMYY.png)
-└── logs/                     # Daily timestamped execution logs
 ```
+  1. Fill today's diary entry only
+  2. Backfill all pending past entries
+  3. Backfill from a specific date
+  4. Check completion status
+  5. Exit
+```
+
+> **Note:** You need [Python 3.10+](https://www.python.org/downloads/) installed.
+> Make sure to check **"Add Python to PATH"** during installation.
+
+---
+
+## Enable Automatic Daily Mode (Optional)
+
+Want the bot to fill your diary automatically every day without you doing anything?
+
+1. Right-click **`setup_scheduler.bat`** → **Run as Administrator**
+2. Click **Yes** on the Windows prompt
+3. Done! From now on:
+   - Every time you log in or wake your laptop, it silently checks if today's entry is pending
+   - If your laptop starts without Wi-Fi and connects later, it catches up automatically
+   - Once today's entry is done, background checks exit in 0.05 seconds with zero resource usage
+   - You get a desktop notification when your entry is submitted
+
+---
+
+## Requirements
+
+| Requirement | Details |
+|:---|:---|
+| **OS** | Windows 10 / 11 |
+| **Python** | 3.10 or higher ([Download](https://www.python.org/downloads/)) |
+| **Internet** | Required during diary submission |
+| **Your Diary File** | The `.docx` file provided by Edutainer with daily entries |
+
+All other dependencies (Playwright, python-docx, Chromium) are installed automatically.
+
+---
+
+## Project Structure
+
+```
+├── start.bat                 ← START HERE (new users)
+├── setup.bat                 ← Alternative: full install + start
+├── setup_scheduler.bat       ← Enable daily auto-mode (run as Admin)
+├── run_backfill.bat          ← Quick backfill shortcut
+│
+├── main.py                   # CLI orchestrator
+├── browser_bot.py            # Playwright automation engine
+├── docx_parser.py            # Universal .docx diary parser
+├── config.py                 # Auto-config & credential loader
+├── state_manager.py          # Persistent state tracker (state.json)
+├── setup_wizard.py           # Interactive setup & menu
+├── logger.py                 # File + console logging
+│
+├── launcher.bat              # Smart launcher for scheduled task
+├── launcher.vbs              # Silent background runner
+├── register_task.ps1         # Windows Task Scheduler registration
+├── requirements.txt          # Python dependencies
+├── credentials.example.json  # Template for credentials
+│
+├── screenshots/              # Verification screenshots (DDMMYY.png)
+├── logs/                     # Daily execution logs
+└── state.json                # Tracks completed/pending entries
+```
+
+---
+
+## CLI Commands (Advanced)
+
+| Command | What it does |
+|:---|:---|
+| `python main.py` | Fill today's entry (or earliest pending) |
+| `python main.py --headless` | Run silently without opening browser |
+| `python main.py --backfill` | Fill all pending entries up to today |
+| `python main.py --backfill --start 24/09/2026` | Backfill from a specific date |
+| `python main.py --date 15/10/2026` | Fill one specific date |
+| `python main.py --date 15/10/2026 --force` | Re-do a completed date |
+| `python main.py --status` | Show completion summary |
+
+Date formats accepted: `DD/MM/YYYY`, `DD/MM/YY`, `YYYY-MM-DD`
+
+---
+
+## FAQ
+
+**Q: Will this work for AI / Data Science / Cloud internships?**
+Yes! The bot auto-detects your enrolled internship on the portal. Skills are mapped for Web Dev, AI, ML, Data Science, Cyber Security, Cloud, and more.
+
+**Q: What if I turn on my laptop without Wi-Fi?**
+The bot checks every 15 minutes. As soon as Wi-Fi connects, it submits automatically.
+
+**Q: What if my laptop was off all day?**
+When you next turn it on and connect to Wi-Fi, it catches up and fills the missed day.
+
+**Q: Is my password safe?**
+Your `credentials.json` is listed in `.gitignore` and will never be pushed to GitHub. It stays only on your local machine.
+
+**Q: Can I change my credentials later?**
+Run `start.bat` again — it will ask if you want to change credentials.
 
 ---
 
 ## Privacy & Security
 
-Your `.gitignore` is pre-configured to ensure that:
-- `credentials.json` (your password and email) is **never** pushed to GitHub.
-- `state.json`, `screenshots/`, and `*.docx` remain private to your local machine.
+Your `.gitignore` ensures these files are **never** pushed to GitHub:
+- `credentials.json` (email & password)
+- `state.json` (completion history)
+- `screenshots/` (personal verification images)
+- `*.docx` (your diary document)
+
+---
+
+## Credits
+
+Built by [RabbaniHacker](https://github.com/RabbaniHacker)

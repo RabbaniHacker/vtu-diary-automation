@@ -62,25 +62,40 @@ def ensure_dirs():
 
 
 def load_credentials() -> dict:
-    """Load portal credentials and optional settings from credentials.json."""
+    """Load portal credentials and optional settings from credentials.json.
+    If credentials are missing or have placeholder values, launches the
+    interactive wizard to collect them from the user."""
+    needs_wizard = False
+
     if not os.path.exists(CREDENTIALS_FILE):
-        template = {
-            "user_id": "YOUR_VTU_EMAIL_OR_ID_HERE",
-            "password": "YOUR_PORTAL_PASSWORD_HERE",
-            "internship_keyword": "auto",
-            "work_hours": "5.5"
-        }
-        with open(CREDENTIALS_FILE, "w", encoding="utf-8") as f:
-            json.dump(template, f, indent=2)
-        print(f"[!] Created {CREDENTIALS_FILE} -- please fill in your credentials and re-run.")
-        sys.exit(1)
+        needs_wizard = True
+    else:
+        with open(CREDENTIALS_FILE, "r", encoding="utf-8") as f:
+            creds = json.load(f)
+        if creds.get("user_id", "").startswith("YOUR_") or not creds.get("user_id") or not creds.get("password"):
+            needs_wizard = True
+
+    if needs_wizard:
+        print("[!] Credentials not configured. Starting setup wizard...")
+        print()
+        try:
+            from setup_wizard import ensure_credentials
+            creds = ensure_credentials()
+        except Exception:
+            # Fallback: create template and exit
+            template = {
+                "user_id": "YOUR_VTU_EMAIL_OR_ID_HERE",
+                "password": "YOUR_PORTAL_PASSWORD_HERE",
+                "internship_keyword": "auto",
+                "work_hours": "5.5"
+            }
+            with open(CREDENTIALS_FILE, "w", encoding="utf-8") as f:
+                json.dump(template, f, indent=2)
+            print(f"[!] Created {CREDENTIALS_FILE} -- please fill in your credentials and re-run.")
+            sys.exit(1)
 
     with open(CREDENTIALS_FILE, "r", encoding="utf-8") as f:
         creds = json.load(f)
-
-    if creds.get("user_id", "").startswith("YOUR_"):
-        print(f"[!] Please fill in your real credentials in {CREDENTIALS_FILE}")
-        sys.exit(1)
 
     # Defaults
     if "work_hours" not in creds:
