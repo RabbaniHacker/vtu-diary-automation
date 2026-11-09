@@ -133,6 +133,7 @@ All other dependencies (Playwright, python-docx, Chromium) are installed automat
 ├── start.bat                 ← START HERE (new users)
 ├── setup.bat                 ← Alternative: full install + start
 ├── setup_scheduler.bat       ← Enable daily auto-mode (run as Admin)
+├── uninstall.bat             ← One-click uninstaller (removes background task)
 ├── run_backfill.bat          ← Quick backfill shortcut
 ├── generate_diary.py         ← Instant offline diary generator for any domain
 ├── PROMPT_TEMPLATE.md        ← Ready-to-copy Claude / ChatGPT prompt
@@ -198,6 +199,29 @@ Your `credentials.json` is listed in `.gitignore` and will never be pushed to Gi
 
 **Q: Can I change my credentials or domain later?**
 Run `start.bat` and select **Option 5** (Change Settings) to update your hours, domain, or login anytime.
+
+**Q: How do I completely stop or uninstall the automation?**
+Double-click `uninstall.bat`! It removes the background task immediately.
+
+---
+
+## How to Uninstall
+
+If you completed your internship or want to remove the automation completely from your computer:
+
+### Method 1: One-Click Uninstaller (Recommended)
+1. Double-click **`uninstall.bat`** (click **Yes** on the Windows Administrator prompt).
+2. It will:
+   - Remove the background Windows Scheduled Task (`VTU_Diary_Automation`) so it stops running.
+   - Ask if you want to remove the Playwright Chromium browser to free up ~400 MB of disk space.
+3. You can then safely delete this project folder.
+
+### Method 2: Manual Removal via PowerShell
+Open PowerShell as Administrator and run:
+```powershell
+Unregister-ScheduledTask -TaskName "VTU_Diary_Automation" -Confirm:$false
+```
+Then delete the project folder.
 
 ---
 
